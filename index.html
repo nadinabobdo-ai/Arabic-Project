@@ -296,70 +296,7 @@
     </div>
 </section>
 <!-- Quiz Section -->
-<section id="digital-addiction-quiz" class="py-20 bg-indigo-50">
-  <div class="max-w-3xl mx-auto px-4 text-center">
-    <!-- العنوان المختصر -->
-    <h2 class="text-3xl font-bold text-indigo-900 mb-2 italic">اختبر وعيك الرقمي</h2>
-    <!-- وصف مشوق -->
-    <p class="text-slate-700 mb-8 text-lg">
-      هل أنت في منطقة الأمان الرقمي؟ أجب على الأسئلة التالية لتعرف مستوى اعتمادك الرقمي وتأثيره على حياتك اليومية.
-    </p>
-
-    <!-- صندوق الكويز -->
-    <div id="quizContainer" class="bg-white p-8 rounded-2xl shadow-lg text-left">
-      <div id="quiz"></div>
-      <button id="submitQuiz" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-bold transition">اعرف نتيجتك</button>
-      <div id="quizResult" class="mt-4 text-center font-bold text-lg text-indigo-800"></div>
-    </div>
-  </div>
-</section>
-
-<script>
-  const quizData = [
-    {
-      question: "كم ساعة تقضي يوميًا أمام الشاشات خارج المدرسة؟",
-      options: ["أقل من ساعتين", "2-4 ساعات", "4-6 ساعات", "أكثر من 6 ساعات"],
-      points: [0, 1, 2, 3]
-    },
-    {
-      question: "هل تشعر بالقلق إذا لم تستخدم هاتفك لفترة قصيرة؟",
-      options: ["لا إطلاقًا", "أحيانًا", "غالبًا", "دائمًا"],
-      points: [0, 1, 2, 3]
-    },
-    {
-      question: "هل تؤجل مهامك اليومية بسبب استخدامك للأجهزة الرقمية؟",
-      options: ["أبدًا", "أحيانًا", "غالبًا", "دائمًا"],
-      points: [0, 1, 2, 3]
-    },
-    {
-      question: "هل تستخدم الهاتف قبل النوم مباشرة؟",
-      options: ["نادرًا", "أحيانًا", "غالبًا", "دائمًا"],
-      points: [0, 1, 2, 3]
-    },
-    {
-      question: "هل تشعر بتشتت ذهنك أثناء الدراسة بسبب الإشعارات؟",
-      options: ["لا أبدًا", "أحيانًا", "غالبًا", "دائمًا"],
-      points: [0, 1, 2, 3]
-    }
-  ];
-
-  const quizContainer = document.getElementById('quiz');
-  const submitButton = document.getElementById('submitQuiz');
-  const resultContainer = document.getElementById('quizResult');
-
-  function buildQuiz() {
-    const output = [];
-    quizData.forEach((q, index) => {
-      const optionsHtml = q.options.map((option, i) =>
-        `<label class="block mb-2">
-          <input type="radio" name="question${index}" value="${q.points[i]}" class="mr-2"> ${option}
-        </label>`).join('');
-      output.push(`<div class="mb-6">
-        <p class="font-bold mb-2">${index + 1}. ${q.question}</p>
-        ${optionsHtml}
-      </div>`);
-    });
-    quizContainer.innerHTML = output.join('');
+<iframe width="640px" height="480px" src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAANAApR4xWlUQUs2NjM0MThON1VGR0MwVzZaSFJOMjVLMy4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
   }
 
   function calculateResult() {
@@ -490,3 +427,4 @@
     </script>
 </body>
 </html>
+
