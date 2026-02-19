@@ -3,495 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكي مصنع الروبوتات والحلويات الذكي</title>
+    <title>نادي عباقرة الروبوت - حقيبة المستقبل</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
-        
         body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #fdf5e6;
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
+            font-family: 'Cairo', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            background-color: #0f172a;
         }
-
-        #factory-canvas {
-            display: block;
-            background: radial-gradient(circle at center, #fff9f0 0%, #fdf5e6 100%);
+        .hero-gradient {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
-        }
-
-        .station-slot {
-            width: 44px;
-            height: 44px;
-            border: 1.5px solid #D7CCC8;
+        
+        /* تأثيرات الحقيبة التفاعلية */
+        .bag-container {
+            position: relative;
+            height: 800px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: grab;
-            border-radius: 12px;
-            background: white;
-            transition: all 0.2s ease;
+            perspective: 1000px;
         }
 
-        .station-slot:hover {
-            transform: scale(1.05);
-            border-color: #A1887F;
+        .central-bag {
+            z-index: 50;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 50px rgba(59, 130, 246, 0.6));
+            cursor: pointer;
         }
 
-        .dragging {
-            opacity: 0.3;
-            transform: scale(0.8);
+        .central-bag:hover {
+            transform: scale(1.1) rotate(5deg);
         }
 
-        .glitch-btn {
-            background: #ff7675;
+        .resource-node {
+            position: absolute;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            transform: scale(0) translateZ(-100px);
+            pointer-events: none;
+        }
+
+        .bag-container.active .resource-node {
+            opacity: 1;
+            transform: scale(1) translateZ(0);
+            pointer-events: auto;
+        }
+
+        /* تصميم الخانات الزجاجي الاحترافي - بدون إطارات سوداء */
+        .node-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 160px;
+            cursor: pointer;
+            transition: all 0.4s ease;
             color: white;
-            transition: all 0.3s ease;
         }
 
-        .glitch-btn.active {
-            background: #d63031;
-            animation: pulse-red 1.5s infinite;
+        .node-content:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
         }
 
-        @keyframes pulse-red {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(0.98); }
+        /* أنيميشن الطفو */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
 
-        /* تنسيق خاص لشريط التمرير إذا لزم الأمر */
-        .custom-scroll::-webkit-scrollbar {
-            width: 4px;
+        .floating {
+            animation: float 5s ease-in-out infinite;
         }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #D7CCC8;
-            border-radius: 10px;
+
+        /* نبضات الطاقة الخلفية */
+        .pulse-ring {
+            position: absolute;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bag-container.active .pulse-ring {
+            animation: pulse 4s linear infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.5); opacity: 0.5; }
+            100% { transform: scale(2.5); opacity: 0; }
         }
     </style>
 </head>
-<body>
+<body class="text-slate-100">
 
-    <!-- لوحة التحكم العلوية - تم تصغيرها ووضعها في الزاوية لتجنب الحجب -->
-    <div class="fixed top-5 left-5 z-20 pointer-events-none">
-        <div class="glass-panel p-4 rounded-[1.2rem] pointer-events-auto w-64">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-xl">🏭</span>
-                <h1 class="text-sm font-bold text-[#5D4037]">نظام المصنع الذكي</h1>
-            </div>
-
-            <div class="space-y-3">
-                <div class="bg-white/40 p-2 rounded-xl">
-                    <div class="flex justify-between text-[10px] mb-1 text-[#8D6E63] font-bold">
-                        <span>كفاءة الإنتاج</span>
-                        <span id="quality-val" class="text-green-600">100%</span>
-                    </div>
-                    <div class="w-full bg-gray-200/50 h-1.5 rounded-full overflow-hidden">
-                        <div id="quality-bar" class="bg-green-500 h-full transition-all duration-700" style="width: 100%"></div>
-                    </div>
+    <!-- Navbar -->
+    <nav class="fixed w-full z-[100] bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between h-20 items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
                 </div>
-
-                <div class="flex justify-between items-center bg-white/40 p-2 rounded-xl">
-                    <span class="text-[11px] text-[#8D6E63]">القطع المشحونة:</span>
-                    <span id="count-val" class="text-lg font-black text-[#5D4037]">0</span>
-                </div>
-
-                <button id="glitch-toggle" class="glitch-btn w-full py-2.5 rounded-xl text-[10px] font-bold pointer-events-auto flex items-center justify-center gap-2 shadow-sm">
-                    <span>⚠️</span>
-                    <span>محاكاة خلل تقني</span>
-                </button>
+                <span class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-l from-blue-400 to-white">عباقرة الروبوت</span>
             </div>
-            
-            <div class="mt-4 pt-3 border-t border-dashed border-[#D7CCC8]">
-                <p class="text-[9px] font-bold mb-2 uppercase tracking-tight text-[#A1887F]">تسلسل المسار (اسحب للترتيب)</p>
-                <div id="sortable-stations" class="flex flex-wrap gap-1.5">
-                    <div draggable="true" data-type="mix" class="station-slot text-base" title="خلط">🥣</div>
-                    <div draggable="true" data-type="cool" class="station-slot text-base" title="تبريد">❄️</div>
-                    <div draggable="true" data-type="wrap" class="station-slot text-base" title="تغليف">🎁</div>
-                    <div draggable="true" data-type="check" class="station-slot text-base" title="فحص">🔍</div>
-                    <div draggable="true" data-type="load" class="station-slot text-base" title="تعبئة">📦</div>
+            <div class="hidden md:flex space-x-8 space-x-reverse font-bold text-sm">
+                <a href="#home" class="hover:text-blue-400 transition">الرئيسية</a>
+                <a href="#resources" class="hover:text-blue-400 transition">حقيبة المستقبل</a>
+                <a href="#contact" class="hover:text-blue-400 transition font-medium bg-blue-600 px-4 py-2 rounded-lg">انضم إلينا</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-gradient min-h-[60vh] flex items-center pt-24">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-7xl font-black mb-6">
+                حقيبة المستقبل <br>
+                <span class="text-blue-500">مشاريع العباقرة</span>
+            </h1>
+            <p class="text-slate-400 text-xl max-w-2xl mx-auto">
+                مجموعة مختارة من المواقع والمشاريع لطلاب الصف الخامس وحتى الثامن.
+            </p>
+        </div>
+    </section>
+
+    <!-- Interactive Bag Section -->
+    <section id="resources" class="py-10 relative">
+        <div class="text-center mb-4">
+            <button id="activateBtn" class="bg-blue-600/20 text-blue-400 border border-blue-600/50 px-6 py-2 rounded-full hover:bg-blue-600 hover:text-white transition-all font-bold">
+                اضغط لفتح الحقيبة
+            </button>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="bag-container" id="bagArea">
+                <div class="pulse-ring w-40 h-40"></div>
+                <div class="pulse-ring w-40 h-40" style="animation-delay: 1s"></div>
+                <div class="pulse-ring w-40 h-40" style="animation-delay: 2s"></div>
+
+                <!-- Central Professional Bag SVG -->
+                <div class="central-bag" id="mainBag">
+                    <svg width="220" height="220" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="40" y="70" width="120" height="90" rx="15" fill="#1e40af" stroke="#3b82f6" stroke-width="4"/>
+                        <path d="M75 70V50C75 40 85 30 100 30C115 30 125 40 125 50V70" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
+                        <rect x="85" y="100" width="30" height="20" rx="5" fill="#3b82f6"/>
+                        <path d="M40 90H160" stroke="#1d4ed8" stroke-width="2"/>
+                        <circle cx="100" cy="110" r="4" fill="white" class="animate-pulse"/>
+                    </svg>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- لوحة التشخيص - تظهر عند النقر على روبوت -->
-    <div id="inspector-panel" class="fixed bottom-5 right-5 glass-panel p-4 rounded-[1.2rem] pointer-events-auto w-60 hidden z-20 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <div class="flex items-center gap-2 mb-3 border-b border-[#D7CCC8] pb-2">
-            <span id="inspected-icon" class="text-lg">🤖</span>
-            <h3 class="font-bold text-xs text-[#5D4037]">بيانات الوحدة</h3>
+    <!-- Footer -->
+    <footer class="bg-slate-950 py-12 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-500 font-bold">نادي عباقرة الروبوت - تمكين جيل المستقبل</p>
         </div>
-        <div id="robot-details" class="text-[10px] space-y-2 text-[#795548]">
-            <!-- تعبئة البيانات -->
-        </div>
-    </div>
+    </footer>
 
-    <!-- رسائل التغذية الراجعة -->
-    <div id="feedback-toast" class="fixed top-8 left-1/2 -translate-x-1/2 glass-panel px-6 py-2.5 rounded-full text-[#5D4037] text-xs font-bold opacity-0 transition-all duration-500 pointer-events-none shadow-lg border border-white">
-        ✨ تم الشحن بنجاح
-    </div>
-
-    <canvas id="factory-canvas"></canvas>
-
-<script>
-    const canvas = document.getElementById('factory-canvas');
-    const ctx = canvas.getContext('2d');
-    const qualityVal = document.getElementById('quality-val');
-    const qualityBar = document.getElementById('quality-bar');
-    const countVal = document.getElementById('count-val');
-    const feedback = document.getElementById('feedback-toast');
-    const inspectorPanel = document.getElementById('inspector-panel');
-    const robotDetails = document.getElementById('robot-details');
-    const glitchBtn = document.getElementById('glitch-toggle');
-
-    let width, height;
-    let robots = [];
-    let particles = [];
-    let producedCount = 0;
-    let factoryQuality = 100;
-    let selectedRobot = null;
-    let isGlitchActive = false;
-
-    const STATION_TYPES = {
-        mix: { label: 'الخلط', color: '#8D6E63', icon: '🥣', tempChange: 4 },
-        cool: { label: 'التبريد', color: '#80DEEA', icon: '❄️', tempChange: -12 },
-        wrap: { label: 'التغليف', color: '#F48FB1', icon: '🎁', tempChange: 0 },
-        check: { label: 'الفحص', color: '#FFF176', icon: '🔍', tempChange: 1 },
-        load: { label: 'التعبئة', color: '#A1887F', icon: '📦', tempChange: 0 }
-    };
-
-    let currentSequence = ['mix', 'cool', 'wrap', 'check', 'load'];
-    const IDEAL_SEQUENCE = ['mix', 'cool', 'wrap', 'check', 'load'];
-
-    class Robot {
-        constructor(id) {
-            this.id = id;
-            this.reset();
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            this.rotation = Math.random() * Math.PI * 2;
-        }
-
-        reset() {
-            this.targetStep = 0;
-            this.progress = 0;
-            this.temp = 24 + Math.random() * 6;
-            this.vx = (Math.random() - 0.5) * 1;
-            this.vy = (Math.random() - 0.5) * 1;
-            this.currentChocolateQuality = 100;
-            this.isBroken = false;
-        }
-
-        update() {
-            if (isGlitchActive && Math.random() < 0.003) {
-                this.isBroken = true;
-            }
-
-            if (this.isBroken) {
-                this.vx += (Math.random() - 0.5) * 0.4;
-                this.vy += (Math.random() - 0.5) * 0.4;
-                this.temp += 0.05;
-                this.currentChocolateQuality -= 0.08;
-            } else {
-                const targetType = currentSequence[this.targetStep];
-                const targetStation = stations.find(s => s.type === targetType);
-                
-                if (!targetStation) return;
-
-                const dx = targetStation.x - this.x;
-                const dy = targetStation.y - this.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-
-                if (dist < 35) {
-                    this.progress += isGlitchActive ? 0.2 : 0.6;
-                    this.temp += STATION_TYPES[targetType].tempChange * 0.03;
-                    if (this.progress >= 100) this.completeStep();
-                } else {
-                    let speed = isGlitchActive ? 0.12 : 0.28;
-                    this.vx += (dx / dist) * speed;
-                    this.vy += (dy / dist) * speed;
-                    this.rotation = Math.atan2(this.vy, this.vx);
-                }
-            }
-
-            robots.forEach(other => {
-                if (other === this) return;
-                const d = Math.sqrt((other.x - this.x)**2 + (other.y - this.y)**2);
-                if (d < 25) {
-                    this.vx -= (other.x - this.x) * 0.06;
-                    this.vy -= (other.y - this.y) * 0.06;
-                }
-            });
-
-            this.vx *= 0.93;
-            this.vy *= 0.93;
-            this.x += this.vx;
-            this.y += this.vy;
-            
-            if (this.x < 20 || this.x > width-20) this.vx *= -1;
-            if (this.y < 20 || this.y > height-20) this.vy *= -1;
-        }
-
-        completeStep() {
-            this.progress = 0;
-            const currentTask = currentSequence[this.targetStep];
-            
-            if (currentTask !== IDEAL_SEQUENCE[this.targetStep]) {
-                factoryQuality = Math.max(0, factoryQuality - 3);
-            }
-
-            this.targetStep++;
-            if (this.targetStep >= currentSequence.length) {
-                this.targetStep = 0;
-                producedCount++;
-                updateUI();
-                createCelebration(this.x, this.y, STATION_TYPES[currentTask].color);
-            }
-        }
-
-        draw() {
-            const currentTask = currentSequence[this.targetStep];
-            const color = this.isBroken ? '#616161' : STATION_TYPES[currentTask].color;
-
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            
-            // الجسم
-            ctx.shadowBlur = this.isBroken ? 0 : 12;
-            ctx.shadowColor = color + '66';
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.roundRect(-9, -9, 18, 18, 5);
-            ctx.fill();
-            
-            // الوجه والعيون
-            ctx.rotate(this.rotation);
-            ctx.fillStyle = this.isBroken ? '#ff5252' : 'white';
-            ctx.beginPath();
-            ctx.arc(4, -3, 2.2, 0, Math.PI * 2);
-            ctx.arc(4, 3, 2.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // شريط التقدم الدائري الصغير
-            ctx.restore();
-            if (!this.isBroken) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.strokeStyle = '#D7CCC888';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(0, 0, 14, 0, Math.PI * 2);
-                ctx.stroke();
-                
-                ctx.strokeStyle = color;
-                ctx.beginPath();
-                ctx.arc(0, 0, 14, -Math.PI/2, (-Math.PI/2) + (Math.PI * 2 * (this.progress/100)));
-                ctx.stroke();
-                ctx.restore();
-            } else {
-                ctx.fillStyle = "red";
-                ctx.font = "bold 10px Arial";
-                ctx.fillText("ERR", this.x - 10, this.y - 14);
-            }
-        }
-    }
-
-    let stations = [];
-    function init() {
-        resize();
-        robots = Array.from({length: 10}, (_, i) => new Robot(i));
-        animate();
-    }
-
-    function updateStationPositions() {
-        // توزيع المحطات بعيداً عن لوحة التحكم في الزاوية اليسرى العلوية
-        stations = [
-            { type: 'mix', x: width * 0.25, y: height * 0.45 },
-            { type: 'cool', x: width * 0.55, y: height * 0.25 },
-            { type: 'wrap', x: width * 0.85, y: height * 0.45 },
-            { type: 'check', x: width * 0.70, y: height * 0.75 },
-            { type: 'load', x: width * 0.40, y: height * 0.75 }
+    <script>
+        // العناوين الجديدة من الصورة
+        const resources = [
+            { name: "ابن روبوتك", icon: "🛠️", color: "#3b82f6" },
+            { name: "الروبوت الذي بداخلي", icon: "🧠", color: "#6366f1" },
+            { name: "المحقق الذكي", icon: "🔍", color: "#2dd4bf" },
+            { name: "تخصصك المناسب", icon: "🎯", color: "#f59e0b" },
+            { name: "كيف يرى الروبوت عالمنا", icon: "👁️", color: "#ec4899" },
+            { name: "لعبة المسابقة بين الروبوتات", icon: "🎮", color: "#8b5cf6" },
+            { name: "مصنع الشوكولاتة (السرب الروبوتي)", icon: "🍫", color: "#fb7185" },
+            { name: "مطبخ الروبوت", icon: "🍳", color: "#10b981" },
+            { name: "هندسة شكل الروبوت", icon: "📐", color: "#facc15" },
+            { name: "مستقبلنا مع الروبوت", icon: "🚀", color: "#a855f7" }
         ];
-    }
 
-    function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        updateStationPositions();
-    }
+        const bagArea = document.getElementById('bagArea');
+        const mainBag = document.getElementById('mainBag');
+        const activateBtn = document.getElementById('activateBtn');
 
-    function drawStation(s) {
-        const info = STATION_TYPES[s.type];
-        ctx.save();
-        
-        ctx.fillStyle = 'white';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = 'rgba(0,0,0,0.04)';
-        ctx.beginPath();
-        ctx.roundRect(s.x - 35, s.y - 35, 70, 70, 18);
-        ctx.fill();
+        function initResources() {
+            const radius = 320; 
+            const centerX = bagArea.offsetWidth / 2;
+            const centerY = bagArea.offsetHeight / 2;
 
-        ctx.fillStyle = '#5D4037';
-        ctx.font = '28px serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(info.icon, s.x, s.y + 6);
-        
-        ctx.font = 'bold 10px Tajawal';
-        ctx.fillStyle = '#A1887F';
-        ctx.fillText(info.label, s.x, s.y + 30);
-        
-        ctx.restore();
-    }
+            resources.forEach((res, i) => {
+                const angle = (i / resources.length) * Math.PI * 2;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
 
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
+                const node = document.createElement('div');
+                node.className = 'resource-node floating';
+                node.style.left = `calc(50% + ${x}px - 80px)`;
+                node.style.top = `calc(50% + ${y}px - 60px)`;
+                node.style.animationDelay = `${i * 0.3}s`;
 
-        // رسم مسارات الربط
-        ctx.setLineDash([4, 8]);
-        ctx.strokeStyle = isGlitchActive ? '#ff767533' : '#D7CCC844';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for(let i=0; i<currentSequence.length; i++) {
-            const s = stations.find(st => st.type === currentSequence[i]);
-            const nextS = stations.find(st => st.type === currentSequence[(i+1)%currentSequence.length]);
-            ctx.moveTo(s.x, s.y);
-            ctx.lineTo(nextS.x, nextS.y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
+                node.innerHTML = `
+                    <div class="node-content">
+                        <span class="text-4xl mb-2">${res.icon}</span>
+                        <span class="font-bold text-xs text-center leading-tight">${res.name}</span>
+                        <div class="w-8 h-1 bg-blue-500 mt-2 rounded-full opacity-50"></div>
+                    </div>
+                `;
 
-        stations.forEach(drawStation);
-        robots.forEach(r => { r.update(); r.draw(); });
-
-        particles = particles.filter(p => p.life > 0);
-        particles.forEach(p => {
-            p.x += p.vx; p.y += p.vy; p.life -= 0.025;
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 2 * p.life, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 1;
-        });
-
-        if (isGlitchActive) {
-            factoryQuality = Math.max(5, factoryQuality - 0.015);
-            updateUI();
-        }
-
-        requestAnimationFrame(animate);
-    }
-
-    glitchBtn.onclick = () => {
-        isGlitchActive = !isGlitchActive;
-        if (isGlitchActive) {
-            glitchBtn.classList.add('active');
-            glitchBtn.innerHTML = '<span>🛠️</span> <span>إيقاف وإصلاح العطل</span>';
-            showFeedback("🚨 تم رصد خلل في التوجيه!");
-        } else {
-            glitchBtn.classList.remove('active');
-            glitchBtn.innerHTML = '<span>⚠️</span> <span>محاكاة خلل تقني</span>';
-            robots.forEach(r => r.isBroken = false);
-            showFeedback("✅ تم إعادة ضبط النظام");
-        }
-    };
-
-    const sortable = document.getElementById('sortable-stations');
-    let draggedItem = null;
-
-    sortable.addEventListener('dragstart', (e) => {
-        draggedItem = e.target;
-        e.target.classList.add('dragging');
-    });
-
-    sortable.addEventListener('dragend', (e) => {
-        e.target.classList.remove('dragging');
-        const children = Array.from(sortable.children);
-        currentSequence = children.map(c => c.dataset.type);
-    });
-
-    sortable.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(sortable, e.clientX);
-        if (afterElement == null) sortable.appendChild(draggedItem);
-        else sortable.insertBefore(draggedItem, afterElement);
-    });
-
-    function getDragAfterElement(container, x) {
-        const draggableElements = [...container.querySelectorAll('[draggable]:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = x - box.left - box.width / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            else return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    function updateUI() {
-        countVal.innerText = producedCount;
-        qualityVal.innerText = `${Math.floor(factoryQuality)}%`;
-        qualityBar.style.width = `${factoryQuality}%`;
-        
-        if (factoryQuality < 50) qualityBar.className = "bg-red-500 h-full transition-all duration-700";
-        else if (factoryQuality < 80) qualityBar.className = "bg-orange-400 h-full transition-all duration-700";
-        else qualityBar.className = "bg-green-500 h-full transition-all duration-700";
-    }
-
-    function showFeedback(text) {
-        feedback.innerText = text;
-        feedback.style.opacity = '1';
-        feedback.style.transform = 'translateX(-50%) translateY(10px)';
-        setTimeout(() => {
-            feedback.style.opacity = '0';
-            feedback.style.transform = 'translateX(-50%) translateY(0)';
-        }, 2500);
-    }
-
-    function createCelebration(x, y, color) {
-        for(let i=0; i<8; i++) {
-            particles.push({
-                x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
-                color: color, life: 1
+                bagArea.appendChild(node);
             });
         }
-    }
 
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        selectedRobot = robots.find(r => Math.sqrt((r.x - mouseX)**2 + (r.y - mouseY)**2) < 25);
-        
-        if (selectedRobot) {
-            inspectorPanel.classList.remove('hidden');
-            document.getElementById('inspected-icon').innerText = selectedRobot.isBroken ? '⚠️' : '🤖';
-            updateInspector();
-        } else {
-            inspectorPanel.classList.add('hidden');
+        let isOpen = false;
+        function toggleBag() {
+            isOpen = !isOpen;
+            if (isOpen) {
+                bagArea.classList.add('active');
+                mainBag.style.transform = 'scale(1.2) rotate(10deg)';
+                activateBtn.textContent = 'إغلاق الحقيبة';
+            } else {
+                bagArea.classList.remove('active');
+                mainBag.style.transform = 'scale(1) rotate(0deg)';
+                activateBtn.textContent = 'اضغط لفتح الحقيبة';
+            }
         }
-    });
 
-    function updateInspector() {
-        if (!selectedRobot || inspectorPanel.classList.contains('hidden')) return;
-        robotDetails.innerHTML = `
-            <div class="flex justify-between p-1.5 bg-white/50 rounded-lg"><span>المعرف:</span> <span class="font-mono">#${selectedRobot.id + 101}</span></div>
-            <div class="flex justify-between p-1.5"><span>الحالة:</span> <span class="font-bold ${selectedRobot.isBroken ? 'text-red-500' : 'text-green-600'}">${selectedRobot.isBroken ? 'عطل محرك' : 'يعمل'}</span></div>
-            <div class="flex justify-between p-1.5"><span>الحرارة:</span> <span class="${selectedRobot.temp > 42 ? 'text-orange-600' : ''}">${selectedRobot.temp.toFixed(1)}°C</span></div>
-            <div class="flex justify-between p-1.5"><span>كفاءة الوحدة:</span> <span>${selectedRobot.currentChocolateQuality.toFixed(0)}%</span></div>
-        `;
-        requestAnimationFrame(updateInspector);
-    }
+        mainBag.addEventListener('click', toggleBag);
+        activateBtn.addEventListener('click', toggleBag);
 
-    window.addEventListener('resize', resize);
-    init();
-
-</script>
+        window.onload = initResources;
+        window.onresize = () => {
+            const nodes = document.querySelectorAll('.resource-node');
+            nodes.forEach(n => n.remove());
+            initResources();
+        };
+    </script>
 </body>
 </html>
